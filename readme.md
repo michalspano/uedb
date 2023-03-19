@@ -1,3 +1,3 @@
-## The Universal Emotion Detecor Bot
+## The Universal Emotion Detector Bot
 
-TODO
+TODO - finish this readme
