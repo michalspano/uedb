@@ -6,6 +6,7 @@ import DiscordJS, { ColorResolvable } from 'discord.js';
 const API_URL: string = 'https://type.fit/api/quotes';
 const HEADER_COLOR: ColorResolvable = '#5E81AC';
 export const [OK_EMOJI, SUPPORT_EMOJI]: [string, string] = ['🤖', '🤗'];
+// we're using an url to an image hosted on GitHub (a local file won't work, and would be posted as an attachment)
 const EMBED_ICON: string = 'https://github.com/michalspano/uedb/blob/main/images/icon.png?raw=true';
 
 /* Excluded words:
@@ -23,15 +24,23 @@ export const isCurrentUserSad = (msg: string): boolean => {
     return sentiment.analyze(msg).score < 0;
 }
 
+// Note: the potentially returned data of null is handled in the parseQuote function of index.ts
 const fetchData = async (): Promise<{ [key: string | symbol]: any }> => {
-    const response = await fetch(API_URL);
-    return await response.json();
+    try {
+        const response: Response = await fetch(API_URL);
+        return await response.json();
+    } catch (error) {
+        return Promise.reject(error);
+    }
 }
 
 export const getRandomQuote = async (): Promise<{ [key: string]: string }> => {
     const data = await fetchData();
     return data[Math.floor(Math.random() * data.length)];
 }
+
+// This function returns an embed to display a quote in the Discord's Embed format.
+// It takes in two parameters: text and author, which are the quote and the author of the quote, respectively.
 
 export const embmedQuote = (text: string, author: string): DiscordJS.MessageEmbed => {
     return new DiscordJS.MessageEmbed()
@@ -41,9 +50,13 @@ export const embmedQuote = (text: string, author: string): DiscordJS.MessageEmbe
             { name: '👤 Author', value: author, inline: true }
         ])
         .setColor(HEADER_COLOR)
-        .setImage(EMBED_ICON)
         .setTimestamp()
 }
+
+// This function returns an embed object that contains the usage instructions for the bot.
+// It takes a bot ID as a parameter, which is used to tag the bot in the instructions.
+// The function returns an embed object that contains a title, a field, and an image.
+// The field contains the instructions for how to begin using the bot.
 
 export const embedUsage = (botID: string): DiscordJS.MessageEmbed => {
     return new DiscordJS.MessageEmbed()
@@ -57,6 +70,11 @@ export const embedUsage = (botID: string): DiscordJS.MessageEmbed => {
         .setTimestamp()
 }
 
+// Removes all non-alphanumeric characters from the input string.
 const strictlyAlphaNumeric = (str: string): string => {
+    if (typeof str !== 'string') {
+        throw new TypeError('strictlyAlphaNumeric expects a string');
+    }
+
     return str.replace(/[^a-zA-Z0-9]/g, '');
 }
